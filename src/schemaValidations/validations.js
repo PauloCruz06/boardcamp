@@ -1,17 +1,12 @@
 import Joi from "joi";
 
-export async function getValidation(params) {
+export async function postCategoriesValidation(body) {
     const schema = Joi.object({
-        params: Joi.string().valid(
-            'categories',
-            'customers',
-            'games',
-            'rentals'
-        ).required()
+        name: Joi.string().required()
     });
 
     const value = schema.validate({
-        params: params
+        name: body.name
     });
 
     return value;
