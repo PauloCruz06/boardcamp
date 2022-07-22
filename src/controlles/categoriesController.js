@@ -2,10 +2,17 @@ import connection from "../dbStrategy/postgres.js";
 import { postCategoriesValidation } from "../schemaValidations/validations.js";
 
 export async function getCategories(_, res) {
+    const { offSet, limit, order, desc } = res.locals.queryObject;
+    
     try {
         const { rows: categoriesList } = await connection.query(`
             SELECT * FROM categories
+            ${order}
+            ${desc}
+            ${limit}
+            ${offSet}
         `);
+
         if(!categoriesList) res.sendStatus(404);
         res.status(200).send(categoriesList);
     } catch(e) {
