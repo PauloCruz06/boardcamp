@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import categoriesRouter from "./routes/categoriesRouter.js";
 import gamesRouter from "./routes/gamesRouter.js";
 
-
 dotenv.config();
 
 const server = express();

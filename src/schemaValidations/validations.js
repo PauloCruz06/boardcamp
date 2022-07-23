@@ -1,8 +1,9 @@
+import connection from "../dbStrategy/postgres.js";
 import Joi from "joi";
 
 export async function postCategoriesValidation(body) {
     const schema = Joi.object({
-        name: Joi.string().required()
+        name: Joi.string().pattern(/^[A-Z]+/).required()
     });
 
     const value = schema.validate({
@@ -10,6 +11,35 @@ export async function postCategoriesValidation(body) {
     });
 
     return value;
+}
+
+export async function postGamesValidation(body) {
+    try {
+        const { rows: categoryId } = await connection.query(`
+            SELECT (id) FROM categories
+        `);
+        const categoryIdList = categoryId.map((id) => id.id);
+
+        const schema = Joi.object({
+            name: Joi.string().pattern(/^[A-Z0-9]+/).required(),
+            image: Joi.string().uri().required(),
+            stockTotal: Joi.number().integer().min(1).required(),
+            categoryId: Joi.number().valid(...categoryIdList).required(),
+            pricePerDay: Joi.number().integer().min(1).required()
+        });
+
+        const value = schema.validate({
+            name: body.name,
+            image: body.image,
+            stockTotal: body.stockTotal,
+            categoryId: body.categoryId,
+            pricePerDay: body.pricePerDay
+        });
+
+        return value;
+    } catch {
+       return 500;
+    }
 }
 
 export async function querySchemaValidation(query) {
