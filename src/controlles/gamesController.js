@@ -10,8 +10,12 @@ export async function getGames(req, res) {
 
         try {
             const { rows: gamesList } = await connection.query(`
-                SELECT * FROM games
-                WHERE name LIKE $1
+                SELECT games.*, categories.name
+                as "categoryName"
+                FROM games
+                JOIN categories ON
+                games."categoryId"=categories.id
+                WHERE games.name LIKE $1
                 ${order}
                 ${desc}
                 ${limit}
@@ -25,7 +29,11 @@ export async function getGames(req, res) {
     } else {
         try {
             const { rows: gamesList } = await connection.query(`
-                SELECT * FROM games
+                SELECT games.*, categories.name
+                as "categoryName"
+                FROM games
+                JOIN categories ON
+                games."categoryId"=categories.id
                 ${order}
                 ${desc}
                 ${limit}
