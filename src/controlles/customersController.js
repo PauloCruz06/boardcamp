@@ -97,3 +97,52 @@ export async function postCustomers(req, res){
         }
     }
 }
+
+export async function setCustomers(req, res) {
+    const body = req.body;
+    const value = await postCustomersValidation(body);
+    const id = req.params.id;
+
+    if(value.error) return res.status(400).send(value.error.details);
+
+    if(id) {
+        try {
+            const { rows: customerID } = await connection.query(`
+                SELECT (id) FROM customers
+                WHERE id = $1
+            `, [id]);
+
+            if(customerID.length === 0) return res.sendStatus(404);
+
+            const { rows: customersCpf } = await connection.query(`
+                SELECT (cpf) FROM customers
+                WHERE id <> $1
+            `, [id]);
+
+            if(customersCpf.some((n) =>
+                n.cpf === body.cpf
+            )) return res.sendStatus(409);
+
+            await connection.query(`
+                UPDATE customers SET
+                name=$1,
+                phone=$2,
+                cpf=$3,
+                birthday=$4
+                WHERE id = $5
+            `, [
+                body.name,
+                body.phone,
+                body.cpf,
+                body.birthday,
+                id
+            ]);
+
+            res.sendStatus(200);
+        } catch(e) {
+            res.status(500).send(e);
+        }
+    } else {
+        res.sendStatus(422);
+    }
+}
