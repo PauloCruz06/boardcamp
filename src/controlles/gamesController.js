@@ -34,7 +34,7 @@ export async function getGames(req, res) {
 
             res.status(200).send(gamesList);
         } catch(e) {
-            res.sendStatus(500);
+            res.status(500).send(e);
         }
     }
 }
