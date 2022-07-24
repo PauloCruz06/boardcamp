@@ -1,4 +1,5 @@
 import connection from "../dbStrategy/postgres.js";
+import { postCustomersValidation } from "../schemaValidations/validations.js";
 
 export async function getCustomers(req, res) {
     const { offSet, limit, order, desc } = res.locals.queryObject;
@@ -55,5 +56,44 @@ export async function getCustomer(req, res) {
         }
     } else {
         return res.sendStatus(400);
+    }
+}
+
+export async function postCustomers(req, res){
+    const body = req.body;
+    const value = await postCustomersValidation(body);
+    
+    if(value.error) {
+        res.status(400).send(value.error.details);
+    } else {
+        try {
+            const { rows: customersCpf } = await connection.query(`
+                SELECT (cpf) FROM customers
+            `);
+
+            if(customersCpf.some((n) =>
+                n.cpf === body.cpf
+            )) return res.sendStatus(409);
+
+            await connection.query(`
+                INSERT INTO customers (
+                    name,
+                    phone,
+                    cpf,
+                    birthday
+                ) VALUES (
+                    $1, $2, $3, $4
+                )
+            `, [
+                body.name,
+                body.phone,
+                body.cpf,
+                body.birthday
+            ]);
+
+            res.sendStatus(201);
+        } catch(e) {
+            res.status(500).send(e);
+        }
     }
 }

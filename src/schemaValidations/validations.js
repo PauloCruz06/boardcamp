@@ -42,6 +42,24 @@ export async function postGamesValidation(body) {
     }
 }
 
+export async function postCustomersValidation(body) {
+    const schema = Joi.object({
+        name: Joi.string().required(),
+        phone: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
+        cpf: Joi.string().pattern(/^[0-9]{11}$/).required(),
+        birthday: Joi.date().required()
+    });
+
+    const value = schema.validate({
+        name: body.name,
+        phone: body.phone,
+        cpf: body.cpf,
+        birthday: body.birthday
+    });
+
+    return value;
+}
+
 export async function querySchemaValidation(query) {
     const schema = Joi.object({
         offset: Joi.string().pattern(/^[0-9]*$/),

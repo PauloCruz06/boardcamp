@@ -63,13 +63,15 @@ export async function postGames(req, res) {
                     "categoryId",
                     "pricePerDay"
                 ) VALUES (
-                    '${body.name}',
-                    '${body.image}',
-                    ${body.stockTotal},
-                    ${body.categoryId},
-                    ${body.pricePerDay}
+                    $1, $2, $3, $4, $5
                 )
-            `);
+            `, [
+                body.name,
+                body.image,
+                body.stockTotal,
+                body.categoryId,
+                body.pricePerDay
+            ]);
 
             res.sendStatus(201);
         } catch(e) {
