@@ -47,7 +47,7 @@ export async function postCustomersValidation(body) {
         name: Joi.string().required(),
         phone: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
         cpf: Joi.string().pattern(/^[0-9]{11}$/).required(),
-        birthday: Joi.date().required()
+        birthday: Joi.date().less('2006-12-31').required()
     });
 
     const value = schema.validate({
