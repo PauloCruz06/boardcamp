@@ -113,14 +113,18 @@ export async function querySchemaValidation(query) {
             'originalPrice',
             'delayFee'
         ),
-        desc: Joi.string().valid('true', 'false')
+        desc: Joi.string().valid('true', 'false'),
+        status: Joi.string().valid('open', 'closed'),
+        startDate: Joi.string().pattern(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)
     });
 
     const value = schema.validate({
         offset: query.offset,
         limit: query.limit,
         order: query.order,
-        desc: query.desc
+        desc: query.desc,
+        status: query.status,
+        startDate: query.startDate
     });
 
     return value;

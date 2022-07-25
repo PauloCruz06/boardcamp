@@ -3,7 +3,7 @@ import { postRentalsValidation } from "../schemaValidations/validations.js";
 import dayjs from "dayjs";
 
 export async function getRentals(req, res) {
-    const { offSet, limit, order, desc } = res.locals.queryObject;
+    const { offSet, limit, order, desc, status, startDate } = res.locals.queryObject;
     const templateQuery = `
         SELECT rentals.*, json_build_object(
             'id',customers.id,
@@ -21,6 +21,7 @@ export async function getRentals(req, res) {
         rentals."customerId" = customers.id
         JOIN categories ON
         games."categoryId" = categories.id
+        WHERE rentals.id >= 1
     `
 
     if(req.query.customerId && req.query.gameId) {
@@ -29,8 +30,10 @@ export async function getRentals(req, res) {
         try {
             const { rows: rentalsList } = await connection.query(`
                 ${templateQuery}
-                WHERE rentals."customerId"=$1 
+                AND rentals."customerId"=$1 
                 AND rentals."gameId"=$2
+                ${status}
+                ${startDate}
                 ${order}
                 ${desc}
                 ${limit}
@@ -51,7 +54,9 @@ export async function getRentals(req, res) {
         try {
             const { rows: rentalsList } = await connection.query(`
                 ${templateQuery}
-                WHERE rentals."customerId"=$1 
+                AND rentals."customerId"=$1
+                ${status}
+                ${startDate}
                 ${order}
                 ${desc}
                 ${limit}
@@ -70,7 +75,9 @@ export async function getRentals(req, res) {
         try {
             const { rows: rentalsList } = await connection.query(`
                 ${templateQuery}
-                WHERE rentals."gameId"=$1 
+                AND rentals."gameId"=$1
+                ${status}
+                ${startDate}
                 ${order}
                 ${desc}
                 ${limit}
@@ -87,6 +94,8 @@ export async function getRentals(req, res) {
         try {
             const { rows: rentalsList } = await connection.query(`
                 ${templateQuery}
+                ${status}
+                ${startDate}
                 ${order}
                 ${desc}
                 ${limit}
