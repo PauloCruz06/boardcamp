@@ -200,3 +200,32 @@ export async function setRentals(req, res) {
         res.sendStatus(422);
     }
 }
+
+export async function deleteRentals(req, res) {
+    const { id } = req.params;
+
+    if(id) {
+        try {
+            const { rows: rental } = await connection.query(`
+                SELECT * FROM rentals
+                WHERE id = $1    
+            `, [id]);
+
+            if(rental.length === 0) return res.sendStatus(404);
+            if(rental.some((n) =>
+                n.returnDate === null
+            )) return res.sendStatus(400);
+
+            await connection.query(`
+                DELETE FROM rentals
+                WHERE id = $1
+            `, [id]);
+
+            res.sendStatus(200);
+        } catch(e) {
+            res.status(500).send(e);
+        }
+    } else {
+        res.sendStatus(422);
+    }
+}
