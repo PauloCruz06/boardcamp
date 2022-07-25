@@ -52,7 +52,9 @@ export async function postGames(req, res) {
     const value = await postGamesValidation(body);
 
     if(value.error || value === 500) {
-        res.status(400).send(value.error.details);
+        res.status(400).send(
+            value.error ? value.error.details : ''
+        );
     } else {
         try {
             const { rows: gamesNameList } = await connection.query(`

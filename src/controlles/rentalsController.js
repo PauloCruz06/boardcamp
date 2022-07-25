@@ -1,4 +1,6 @@
 import connection from "../dbStrategy/postgres.js";
+import { postRentalsValidation } from "../schemaValidations/validations.js";
+import dayjs from "dayjs";
 
 export async function getRentals(req, res) {
     const { offSet, limit, order, desc } = res.locals.queryObject;
@@ -21,7 +23,27 @@ export async function getRentals(req, res) {
         games."categoryId" = categories.id
     `
 
-    if(req.query.customerId && req.query.gameId) return res.sendStatus(422);
+    if(req.query.customerId && req.query.gameId) {
+        const { customerId, gameId } = req.query;
+
+        try {
+            const { rows: rentalsList } = await connection.query(`
+                ${templateQuery}
+                WHERE rentals."customerId"=$1 
+                AND rentals."gameId"=$2
+                ${order}
+                ${desc}
+                ${limit}
+                ${offSet}
+            `, [customerId, gameId]);
+
+            if(rentalsList.length === 0) return res.sendStatus(404);
+    
+            return res.status(200).send(rentalsList);
+        } catch(e) {
+            return res.status(500).send(e);
+        }
+    }
 
     if(req.query.customerId) {
         const { customerId } = req.query;
@@ -72,6 +94,60 @@ export async function getRentals(req, res) {
             `);
     
             res.status(200).send(rentalsList);
+        } catch(e) {
+            res.status(500).send(e);
+        }
+    }
+}
+
+export async function postRentals(req, res) {
+    const body = req.body;
+    const value = await postRentalsValidation(body);
+
+    if(value.error || value === 500) {
+        res.status(400).send(
+            value.error ? value.error.details : ''
+        );
+    } else {
+        try {
+            const { rows: game } = await connection.query(`
+                SELECT * FROM games
+                WHERE id = ${body.gameId}
+            `);
+            const { rowCount: rentalsLength } = await connection.query(`
+                SELECT ("returnDate") FROM rentals
+                WHERE "returnDate" IS NULL
+                AND "gameId" = ${body.gameId}
+            `);
+
+            if(rentalsLength >= game[0].stockTotal) return res.sendStatus(400);
+
+            const rentDate = dayjs().format('YYYY-MM-DD');
+            const originalPrice = game[0].pricePerDay * body.daysRented;
+
+            await connection.query(`
+                INSERT INTO rentals (
+                    "customerId",
+                    "gameId",
+                    "rentDate",
+                    "daysRented",
+                    "returnDate",
+                    "originalPrice",
+                    "delayFee"
+                ) VALUES (
+                    $1, $2, $3, $4, $5, $6, $7
+                )
+            `, [
+                body.customerId,
+                body.gameId,
+                rentDate,
+                body.daysRented,
+                null,
+                originalPrice,
+                null
+            ]);
+
+            res.sendStatus(201);
         } catch(e) {
             res.status(500).send(e);
         }

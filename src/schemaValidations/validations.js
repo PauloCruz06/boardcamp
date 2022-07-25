@@ -60,6 +60,38 @@ export async function postCustomersValidation(body) {
     return value;
 }
 
+export async function postRentalsValidation(body) {
+    try{
+        const { rows: customerId } = await connection.query(`
+            SELECT (id) FROM customers
+        `);
+        const customersIdList = customerId.map((id) =>
+            id.id
+        );
+
+        const { rows: gameId } = await connection.query(`
+            SELECT (id) FROM games
+        `);
+        const gamesIdList = gameId.map((id) => id.id);
+
+        const schema = Joi.object({
+            customerId: Joi.number().valid(...customersIdList).required(),
+            gameId: Joi.number().valid(...gamesIdList).required(),
+            daysRented: Joi.number().integer().min(1).required()
+        })
+
+        const value = schema.validate({
+            customerId: body.customerId,
+            gameId: body.gameId,
+            daysRented:body.daysRented
+        });
+
+        return value;
+    } catch {
+        return 500;
+    }
+}
+
 export async function querySchemaValidation(query) {
     const schema = Joi.object({
         offset: Joi.string().pattern(/^[0-9]*$/),
